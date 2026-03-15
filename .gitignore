@@ -1,6 +1,12 @@
 # Prerequisites
 *.d
 
+# Config files and passwords
+backend/config.yaml
+backend/uploads/
+backend/build
+backend/run.sh
+
 # Compiled Object files
 *.slo
 *.lo
