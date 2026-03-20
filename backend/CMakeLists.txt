@@ -16,6 +16,7 @@ find_package(Drogon CONFIG REQUIRED)
 
 add_executable(gourmet_backend
     main.cc
+    controllers/RecipeController.cc
 )
 
 # Conecting Drogon to this executable specified the step before
