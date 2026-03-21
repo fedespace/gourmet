@@ -1,10 +1,11 @@
 #include "RecipeController.h"
+#include <optional>
 
 // ================================
 // SUMMARY OF THE METHODS
 // getAllRecipes(request, response)            Fetch all the recipes present in the database
 // getRecipeById(request, response, ID)        Fetch from the database the recipe with specified ID
-// addRecipe(request, response, JSONRecipe)    Add single recipe to the database
+// addRecipe(request, response)                Add single recipe to the database
 // ================================
 
 // GET all the recipes in the database
@@ -19,7 +20,7 @@ void RecipeController::getAllRecipes (
     db->execSqlAsync (
         
         // Query
-        "SELECT id, name FROM recipes",
+        "SELECT id, name, user_id, pic, rating, difficulty, category_id, prep_time_min, guests FROM recipes",
 
         // Callback successful
         [callback](const drogon::orm::Result &result) {
@@ -29,6 +30,12 @@ void RecipeController::getAllRecipes (
                 Json::Value recipe;
                 recipe["id"] = row["id"].as<int64_t>();
                 recipe["name"] = row["name"].as<std::string>();
+                recipe["user_id"] = row["user_id"].as<int>();
+                recipe["rating"] = row["rating"].as<int>();
+                recipe["difficulty"] = row["difficulty"].as<int>();
+                recipe["category_id"] = row["category_id"].as<int64_t>();
+                recipe["prep_time_min"] = row["prep_time_min"].as<int>();
+                recipe["guests"] = row["guests"].as<int>();
                 json.append(recipe);
             }
             auto response = drogon::HttpResponse::newHttpJsonResponse(json);
@@ -60,7 +67,7 @@ void RecipeController::getRecipeById (
     db->execSqlAsync (
 
         // Query
-        "SELECT id, name FROM recipes WHERE id = $1",
+        "SELECT id, name, user_id, pic, rating, difficulty, category_id, prep_time_min, guests FROM recipes WHERE id = $1",
 
         // Callback successful
         [callback](const drogon::orm::Result &result) {
@@ -75,6 +82,12 @@ void RecipeController::getRecipeById (
             Json::Value recipe;
             recipe["id"] = result[0]["id"].as<int64_t>();
             recipe["name"] = result[0]["name"].as<std::string>();
+            recipe["user_id"] = result[0]["user_id"].as<int>();
+            recipe["rating"] = result[0]["rating"].as<int>();
+            recipe["difficulty"] = result[0]["difficulty"].as<int>();
+            recipe["category_id"] = result[0]["category_id"].as<int64_t>();
+            recipe["prep_time_min"] = result[0]["prep_time_min"].as<int>();
+            recipe["guests"] = result[0]["guests"].as<int>();
             auto response = drogon::HttpResponse::newHttpJsonResponse(recipe);
             callback(response);
         }, 
@@ -112,14 +125,40 @@ void RecipeController::addRecipe (
     }
 
     // Fetching the fields from the pointer body
+    std::string pic;
+    if (body->isMember("pic")) {
+       pic = (*body)["pic"].asString();
+    } else {
+        pic = "";
+    }
+    std::optional<int> rating;
+    if (body->isMember("rating")) {
+        rating = (*body)["rating"].asInt();
+    }
+    std::optional<int> difficulty;
+    if (body->isMember("difficulty")) {
+        difficulty = (*body)["difficulty"].asInt();
+    }
+    std::optional<int64_t> category_id;
+    if (body->isMember("category_id")) {
+        category_id = (*body)["category_id"].asInt();
+    }
+    int guests;
+    if (body->isMember("guests")) {
+        guests = (*body)["guests"].asInt();
+    } else {
+        guests = 1;
+    }
+    int cooked;
+    if (body->isMember("cooked")) {
+        cooked = (*body)["cooked"].asInt();
+    } else {
+        cooked = 0;
+    }
+
     int64_t user_id = (*body)["user_id"].asInt64();
     std::string name = (*body)["name"].asString();
-    std::string pic = (*body)["pic"].asString();
-    int rating = (*body)["rating"].asInt64();
-    int difficulty = (*body)["difficulty"].asInt64();
-    int64_t category_id = (*body)["category_id"].asInt64();
-    int prep_time_min = (*body)["prep_time_min"].asInt64();
-    int guests = (*body)["guests"].asInt64();
+    int prep_time_min = (*body)["prep_time_min"].asInt();
 
     // Access the database
     auto db = drogon::app().getDbClient();

@@ -5,7 +5,7 @@
 // SUMMARY OF THE METHODS
 // getAllRecipes(request, response)            Fetch all the recipes present in the database
 // getRecipeById(request, response, ID)        Fetch from the database the recipe with specified ID
-// addRecipe(request, response, JSONRecipe)    Add single recipe to the database
+// addRecipe(request, response)                Add single recipe to the database
 // ================================
 
 class RecipeController: public drogon::HttpController<RecipeController> {
