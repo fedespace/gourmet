@@ -6,6 +6,7 @@
 // getAllRecipes(request, response)            Fetch all the recipes present in the database
 // getRecipeById(request, response, ID)        Fetch from the database the recipe with specified ID
 // addRecipe(request, response)                Add single recipe to the database
+// editRecipe(request, response, ID)           Amend a single recipe with specified ID
 // ================================
 
 class RecipeController: public drogon::HttpController<RecipeController> {
@@ -19,6 +20,8 @@ class RecipeController: public drogon::HttpController<RecipeController> {
             ADD_METHOD_TO(RecipeController::getRecipeById, "/recipes/{id}", drogon::Get);
             // POST recipe
             ADD_METHOD_TO(RecipeController::addRecipe, "/recipes", drogon::Post); 
+            // PUT recipe (modify an excisting one)
+            ADD_METHOD_TO(RecipeController::editRecipe, "/recipes/{id}", drogon::Put);
         METHOD_LIST_END
 
 
@@ -41,5 +44,12 @@ class RecipeController: public drogon::HttpController<RecipeController> {
         void addRecipe(
             const drogon::HttpRequestPtr &req, 
             std::function<void(const drogon::HttpResponsePtr &)> &&callback
+        );
+
+        // PUT recipe with ID
+        void editRecipe(
+            const drogon::HttpRequestPtr &req,
+            std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+            int64_t id
         );
 };

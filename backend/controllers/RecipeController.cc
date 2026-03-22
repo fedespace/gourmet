@@ -6,6 +6,7 @@
 // getAllRecipes(request, response)            Fetch all the recipes present in the database
 // getRecipeById(request, response, ID)        Fetch from the database the recipe with specified ID
 // addRecipe(request, response)                Add single recipe to the database
+// editRecipe(request, response, ID)           Amend a single recipe with specified ID
 // ================================
 
 // GET all the recipes in the database
@@ -166,7 +167,7 @@ void RecipeController::addRecipe (
     // Proceed inserting the data in the correct table 'recipes'
     db->execSqlAsync(
         // Query
-        "INSERT INTO recipes (user_id, name, pic, rating, difficulty, category_id, prep_time_min, guests) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
+        "INSERT INTO recipes (user_id, name, pic, rating, difficulty, category_id, prep_time_min, cooked, guests) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
 
         // Callback success
         [callback](const drogon::orm::Result &result) {
@@ -186,6 +187,97 @@ void RecipeController::addRecipe (
         },
 
         // Inputs to the query
-        user_id, name, pic, rating, difficulty, category_id, prep_time_min, guests
+        user_id, name, pic, rating, difficulty, category_id, prep_time_min, cooked, guests
     );
 }
+
+// ================================
+
+// PUT single recipe with ID = id
+void RecipeController::editRecipe (
+    const drogon::HttpRequestPtr &req,
+    std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+    int64_t id
+) { 
+    // Get the body from the PUT request
+    auto body = req->getJsonObject();
+
+    // Check the body pointer is not null
+    if (body == nullptr) {
+        // Raise error
+        auto response = drogon::HttpResponse::newHttpResponse();
+        response->setStatusCode(drogon::k400BadRequest);
+        callback(response);
+        return;
+    }
+
+    // Fetching the existing fields from the request, overwriting the existing ones
+    std::string pic;
+    if (body->isMember("pic")) {
+       pic = (*body)["pic"].asString();
+    }
+    std::optional<int> rating;
+    if (body->isMember("rating")) {
+        rating = (*body)["rating"].asInt();
+    }
+    std::optional<int> difficulty;
+    if (body->isMember("difficulty")) {
+        difficulty = (*body)["difficulty"].asInt();
+    }
+    std::optional<int64_t> category_id;
+    if (body->isMember("category_id")) {
+        category_id = (*body)["category_id"].asInt64();
+    }
+    int guests;
+    if (body->isMember("guests")) {
+        guests = (*body)["guests"].asInt();
+    }
+    int cooked;
+    if (body->isMember("cooked")) {
+        cooked = (*body)["cooked"].asInt();
+    }
+    int prep_time_min;
+    if (body->isMember("prep_time_min")) {
+        prep_time_min = (*body)["prep_time_min"].asInt();
+    }
+    std::string name;
+    if (body->isMember("name")) {
+        name = (*body)["name"].asString();
+    }
+
+    // Access the database
+    auto db = drogon::app().getDbClient();
+
+    // Proceed inserting the data in the correct table 'recipes'
+    db->execSqlAsync(
+        // Query
+        "UPDATE recipes \
+        SET name = $1, pic = $2, rating = $3, difficulty = $4, category_id = $5, prep_time_min = $6, cooked = $7, guests = $8 \
+        WHERE id = $9",
+
+        // Callback success
+        [callback](const drogon::orm::Result &result) {
+            if (result.affectedRows() == 0) {
+                auto response = drogon::HttpResponse::newHttpResponse();
+                response->setStatusCode(drogon::k404NotFound);
+                callback(response);
+                return;
+            }
+            auto response = drogon::HttpResponse::newHttpResponse();
+            response->setStatusCode(drogon::k200OK);
+            callback(response);
+        }, 
+
+        // Callback fail
+        [callback](const drogon::orm::DrogonDbException &e) {
+            auto response = drogon::HttpResponse::newHttpResponse();
+            response->setStatusCode(drogon::k500InternalServerError);
+            response->setBody(e.base().what());
+            callback(response);
+        },
+
+        // Inputs to the query
+        name, pic, rating, difficulty, category_id, prep_time_min, cooked, guests, id
+    );
+}
+
