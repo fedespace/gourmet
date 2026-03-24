@@ -7,6 +7,7 @@
 // getRecipeById(request, response, ID)        Fetch from the database the recipe with specified ID
 // addRecipe(request, response)                Add single recipe to the database
 // editRecipe(request, response, ID)           Amend a single recipe with specified ID
+// deleteRecipe(request, response, ID)         Delete the recipe with specified ID
 // ================================
 
 class RecipeController: public drogon::HttpController<RecipeController> {
@@ -22,6 +23,8 @@ class RecipeController: public drogon::HttpController<RecipeController> {
             ADD_METHOD_TO(RecipeController::addRecipe, "/recipes", drogon::Post); 
             // PUT recipe (modify an excisting one)
             ADD_METHOD_TO(RecipeController::editRecipe, "/recipes/{id}", drogon::Put);
+            // DELETE recipe
+            ADD_METHOD_TO(RecipeController::deleteRecipe, "/recipes/{id}", drogon::Delete);
         METHOD_LIST_END
 
 
@@ -48,6 +51,13 @@ class RecipeController: public drogon::HttpController<RecipeController> {
 
         // PUT recipe with ID
         void editRecipe(
+            const drogon::HttpRequestPtr &req,
+            std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+            int64_t id
+        );
+
+        // DELETE recipe with ID
+        void deleteRecipe(
             const drogon::HttpRequestPtr &req,
             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
             int64_t id

@@ -281,3 +281,43 @@ void RecipeController::editRecipe (
     );
 }
 
+// ================================
+
+// DELETE recipe with ID = id
+void RecipeController::deleteRecipe (
+    const drogon::HttpRequestPtr &req,
+    std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+    int64_t id
+) { 
+    // Fetch the database and define it as variable 'db'
+    auto db = drogon::app().getDbClient();
+
+    // SQL Query
+    db->execSqlAsync(
+        // Query
+        "DELETE FROM recipes WHERE id = $1",
+
+        // Callback success
+        [callback](const drogon::orm::Result &result) {
+            if (result.affectedRows() == 0) {
+                auto response = drogon::HttpResponse::newHttpResponse();
+                response->setStatusCode(drogon::k404NotFound);
+                callback(response);
+                return;
+            }
+            auto response = drogon::HttpResponse::newHttpResponse();
+            response->setStatusCode(drogon::k200OK);
+            callback(response);
+        },
+
+        // Callback fail
+        [callback](const drogon::orm::DrogonDbException &e) {
+            auto response = drogon::HttpResponse::newHttpResponse();
+            response->setStatusCode(drogon::k500InternalServerError);
+            response->setBody(e.base().what());
+            callback(response);
+        },
+
+        id
+    );
+}
